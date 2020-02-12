@@ -5,19 +5,19 @@
 DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cmmunications in Medicine)ヘッダーから線量情報と患者情報を抽出するオープンソースソフトウェアです。
 
 ## 抽出する線量情報と患者情報
--meanCTDIvol  
--DLP  
--Acquisition Protocol  
--Patient ID  
--StudyDate  
--Patient Name  
--Study Description  
--Patient BirthDate  
--Patient Sex  
--Patient Age  
--Patient Size  
--Patient Weight  
--Radionuclide Total Dose　(only PET/CT)  
+- meanCTDIvol  
+- DLP  
+- Acquisition Protocol  
+- Patient ID  
+- StudyDate  
+- Patient Name  
+- Study Description  
+- Patient BirthDate  
+- Patient Sex  
+- Patient Age  
+- Patient Size  
+- Patient Weight  
+- Radionuclide Total Dose　(only PET/CT)  
 
 ## DoNuTSの使い方
 1. 右上にある緑色の**Clone or download**をクリック
