@@ -42,7 +42,7 @@ SIEMENS製のRDSRとPET画像については検証済み
 
 ## exe化
 本ソフトウェアのexe化には`pyinstaller`を使用した．開発版を使用することでWindows7の端末でも動作することを確認した．もし，ソースコードを編集してexe化を行う場合，`DoNuTS.py`が存在するディレクトリに移動して
-```python
+```
 pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 ```
 でexe化を行うことができます．
