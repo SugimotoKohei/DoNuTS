@@ -8,8 +8,8 @@ DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cm
 
 ## DoNuTSの使い方
 1. 右上にある緑色の**Clone or download**をクリック
-1. DoNuTS.exeを含むファイルがPC内にダウンロード
-1. DoNuTS.exeをダブルクリック
+1. **DoNuTS.exe**を含むファイルがPC内にダウンロード
+1. **DoNuTS.exe**をダブルクリック
 1. ポップアップが表示され、あらかじめPC内に保存してあるRDSRやDICOMファイルが入ったフォルダを選択
 1. 処理が開始
 1. 処理終了後、4で選択したフォルダ内に**処理を行った日付.csv**としてcsvで抽出したデータが保存されます  
@@ -29,9 +29,9 @@ DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cm
 - Patient Weight  
 - Radionuclide Total Dose　(only PET/CT)  
 
-# 想定される使い方
+## 想定される使い方
 - 被ばく線量管理  
-線量管理ソフトを導入していない施設では，被ばく線量管理は多くの時間と手間のかかる作業となります．そのような施設はDoNuTSを使えばその苦労から解放されます．まず，あらかじめCT検査後の各患者のRDSRファイルをある場所に保存しておく，もしくはPACS上に保存し，実際に被ばく線量管理を行う際にRDSRをExportするなどしてRDSRを一か所に集めます．その後，**DoNuTS**を使用します．そうすれば正確かつ簡便にRDSRから線量情報を抽出することができ，線量管理を円滑に行うことができます．
+線量管理ソフトを導入していない施設では，被ばく線量管理は多くの時間と手間のかかる作業となります．そのような施設はDoNuTSを使えばその苦労から解放されます．まず，あらかじめCT検査後の各患者のRDSRファイルをある場所に保存しておく，もしくはPACS上に保存し，実際に被ばく線量管理を行う際にRDSRをExportするなどしてRDSRを一か所に集めます．その後，**DoNuTS.exe**を使用します．そうすれば正確かつ簡便にRDSRから線量情報を抽出することができ，線量管理を円滑に行うことができます．
 
 ## 検証装置
 SIEMENS製のRDSRとPET画像については検証済み
