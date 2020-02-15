@@ -1,0 +1,9 @@
+*.toc
+*.zip
+*.pkg
+*.html
+*.txt
+*.spec
+*.manifest
+*.pyz
+__pycache__/
