@@ -1,11 +1,13 @@
 import pydicom
 import os
+import sys
 import glob
 import pandas as pd
 import datetime
 import gc
 import tkinter
 from tkinter import filedialog
+from tkinter import messagebox
 from tqdm import tqdm
 
 class create_csv:
@@ -32,7 +34,12 @@ class create_csv:
         tk = tkinter.Tk()
         tk.withdraw()
         self.dicom_dir_path = filedialog.askdirectory(initialdir = self.desktop_dir, title="DICOMファイルが含まれるフォルダを選択")
+        if self.dicom_dir_path == "":
+            messagebox.showerror('エラー', 'フォルダが選択されませんでした')
+            sys.exit(0)
         self.dicom_path = glob.glob(self.dicom_dir_path + '\\**\\*', recursive=True)
+
+        return self.dicom_dir_path
 
 
     def get_dicom_file(self):
@@ -119,7 +126,6 @@ class create_csv:
 
 
     def output_csv(self):
-        # self.final_df.to_csv(self.desktop_dir + '/' + str(datetime.date.today()) + '.csv', index=False)
         self.rdsr_df.to_csv(self.dicom_dir_path + '/' + str(datetime.date.today()) + '.csv', index=False)
 
 
@@ -128,13 +134,14 @@ def main():
     desktop_dir = os.getenv("HOMEDRIVE") + os.getenv("HOMEPATH") + "/Desktop"
     c = create_csv(desktop_dir)
     print('**************************処理開始***************************')
-    c.get_dicom_path()
+    dcm_path = c.get_dicom_path()
     dcm_file = c.get_dicom_file()
     if int(len(dcm_file)) ==0:
-        print('DICOMファイルが存在しません')
+        messagebox.showerror('エラー', 'DICOMファイルが存在しません')
+        sys.exit(0)
     num_of_rdsr, num_of_pet = c.separate_rdsr_and_pet_file()
     if num_of_rdsr == 0:
-        print('RDSRファイルが存在しません')
+        messagebox.showerror('エラー', 'RDSRファイルが存在しません')
     else:
         c.get_events_from_rdsr()
         c.create_rdsr_df()
@@ -143,8 +150,11 @@ def main():
         c.create_pet_df()
         c.create_final_csv()
         print('**********************PETデータの処理完了*********************')
+    if num_of_rdsr or num_of_pet == 0:
+        sys.exit()
     c.output_csv()
     print('**************************処理完了***************************')
+    messagebox.showinfo('処理完了', str(dcm_path)+'にデータが保存されました')
 
 
 if __name__ == '__main__':
