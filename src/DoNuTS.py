@@ -73,21 +73,58 @@ class create_csv:
 
     def get_events_from_rdsr(self):
         '''CTの曝射回数をRDSRからself.eventsとして読み取る'''
-        for eve in self.rdsr_file:
-            self.events.append(eve.ContentSequence[12].ContentSequence[0].MeasuredValueSequence[0].NumericValue)
+        # EventsのEV
+        Events_code = '113812'
+
+        for _, rdsr in enumerate(self.rdsr_file):
+            for _, rdsr2 in enumerate(rdsr.ContentSequence):
+                try:
+                    nest1_len = len(rdsr2.ContentSequence)
+                    for i in range(nest1_len):
+                        EveorAP = rdsr2.ContentSequence[i].ConceptNameCodeSequence[0].CodeValue
+                        if EveorAP == Events_code:
+                            self.events.append(int(rdsr2.ContentSequence[i].MeasuredValueSequence[0].NumericValue))
+                except:
+                    pass
 
 
     def create_rdsr_df(self):
         '''self.rdsr_fileから必要なheader情報だけ抜き出してrdsr_dfとして保存'''
+        # 各データのEV
+        CTDI_code = '113830'
+        DLP_code = '113838'
+        AcquisitionProtocol_code = '125203'
+
+        # データを入れるdictionaryを作成
         rdsr_col_name = ['meanCTDIvol', 'DLP', 'AcquisitionProtocol', 'PatientID', 'StudyDate', 'PatientName',
                          'StudyDescription', 'PatientBirthDate', 'PatientSex', 'PatientAge', 'PatientSize', 'PatientWeight']
         rdsr_data_dic = {col:[] for col in rdsr_col_name}
 
+ 
+        for _, rdsr in enumerate(self.rdsr_file):
+            for _, rdsr2 in enumerate(rdsr.ContentSequence):
+                try:
+                    nest1_len = len(rdsr2.ContentSequence)
+                    for i in range(nest1_len):
+                        AP = rdsr2.ContentSequence[i].ConceptNameCodeSequence[0].CodeValue
+                        if AP == AcquisitionProtocol_code:
+                            rdsr_data_dic['AcquisitionProtocol'].append(rdsr2.ContentSequence[i].TextValue)
+                        try:
+                            nest2_len = len(rdsr2.ContentSequence[i].ContentSequence)
+                            for j in range(nest2_len):
+                                CTDIorDLP = rdsr2.ContentSequence[i].ContentSequence[j].ConceptNameCodeSequence[0].CodeValue
+                                if CTDIorDLP == CTDI_code:
+                                    rdsr_data_dic['meanCTDIvol'].append(rdsr2.ContentSequence[i].ContentSequence[j].MeasuredValueSequence[0].NumericValue)
+                                if CTDIorDLP == DLP_code:
+                                    rdsr_data_dic['DLP'].append(rdsr2.ContentSequence[i].ContentSequence[j].MeasuredValueSequence[0].NumericValue)
+                        except:
+                            pass
+                except:
+                    pass 
+
+        # CTDIvol, DLP, AcquisitionProtocol以外のデータをdictionaryに入れる
         for num, rdsr in enumerate(self.rdsr_file):
             for eve in range(int(self.events[num])):
-                rdsr_data_dic['meanCTDIvol'].append(rdsr.ContentSequence[13+eve].ContentSequence[6].ContentSequence[0].MeasuredValueSequence[0].NumericValue)
-                rdsr_data_dic['DLP'].append(rdsr.ContentSequence[13+eve].ContentSequence[6].ContentSequence[2].MeasuredValueSequence[0].NumericValue)
-                rdsr_data_dic['AcquisitionProtocol'].append(rdsr.ContentSequence[13+eve].ContentSequence[0].TextValue)
                 rdsr_data_dic['PatientID'].append(str(getattr(rdsr, 'PatientID')))
                 rdsr_data_dic['StudyDate'].append(str(getattr(rdsr, 'StudyDate')))
                 rdsr_data_dic['PatientName'].append(str(getattr(rdsr, 'PatientName')))
@@ -97,7 +134,17 @@ class create_csv:
                 rdsr_data_dic['PatientAge'].append(str(getattr(rdsr, 'PatientAge')))
                 rdsr_data_dic['PatientSize'].append(str(getattr(rdsr, 'PatientSize')))
                 rdsr_data_dic['PatientWeight'].append(str(getattr(rdsr, 'PatientWeight')))
-        self.rdsr_df = pd.DataFrame(rdsr_data_dic)
+
+        self.rdsr_df = pd.DataFrame.from_dict(rdsr_data_dic, orient='index').T
+
+        # ScoutのCTDIvol・DLPが表示されない場合の処理
+        if len(rdsr_data_dic['AcquisitionProtocol']) != len(rdsr_data_dic['DLP']):
+            scout_list = ['Topogram', 'Scout view', 'Scanogram', 'Surview', 'Preview', 'Pilot']
+            for i in scout_list:
+                self.rdsr_df = self.rdsr_df[self.rdsr_df['AcquisitionProtocol'] != i]
+            self.rdsr_df.reset_index(inplace=True, drop=True)
+            for key in rdsr_col_name[0:2]:
+                self.rdsr_df[key] = rdsr_data_dic[key]
 
         # メモリの開放
         del rdsr_data_dic, rdsr_col_name
@@ -150,7 +197,7 @@ def main():
         c.create_pet_df()
         c.create_final_csv()
         print('**********************PETデータの処理完了*********************')
-    if num_of_rdsr or num_of_pet == 0:
+    if num_of_rdsr == 0 and num_of_pet == 0:
         sys.exit()
     c.output_csv()
     print('**************************処理完了***************************')
