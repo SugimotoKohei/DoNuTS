@@ -7,3 +7,4 @@
 *.manifest
 *.pyz
 __pycache__/
+.vscode/*

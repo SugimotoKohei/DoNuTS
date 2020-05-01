@@ -123,18 +123,16 @@ class create_csv:
                     pass 
 
         # CTDIvol, DLP, AcquisitionProtocol以外のデータをdictionaryに入れる
+        rdsr_col_name2 = rdsr_col_name[3:]
+
         for num, rdsr in enumerate(self.rdsr_file):
             for eve in range(int(self.events[num])):
-                rdsr_data_dic['PatientID'].append(str(getattr(rdsr, 'PatientID')))
-                rdsr_data_dic['StudyDate'].append(str(getattr(rdsr, 'StudyDate')))
-                rdsr_data_dic['PatientName'].append(str(getattr(rdsr, 'PatientName')))
-                rdsr_data_dic['StudyDescription'].append(str(getattr(rdsr, 'StudyDescription')))
-                rdsr_data_dic['PatientBirthDate'].append(str(getattr(rdsr, 'PatientBirthDate')))
-                rdsr_data_dic['PatientSex'].append(str(getattr(rdsr, 'PatientSex')))
-                rdsr_data_dic['PatientAge'].append(str(getattr(rdsr, 'PatientAge')))
-                rdsr_data_dic['PatientSize'].append(str(getattr(rdsr, 'PatientSize')))
-                rdsr_data_dic['PatientWeight'].append(str(getattr(rdsr, 'PatientWeight')))
-
+                for name in rdsr_col_name2:
+                    try:
+                        rdsr_data_dic[name].append(str(getattr(rdsr, name)))
+                    except:
+                        rdsr_data_dic[name].append(" ")
+                
         self.rdsr_df = pd.DataFrame.from_dict(rdsr_data_dic, orient='index').T
 
         # ScoutのCTDIvol・DLPが表示されない場合の処理
