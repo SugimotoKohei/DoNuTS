@@ -55,3 +55,6 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 
 ## その他
 バグの報告や追加機能のご希望のは[issues](https://github.com/radmodel/DoNuTS/issues)までお願いします．
+
+### 修正履歴
+2020.5.1 線量関連情報に空欄があった際に，空欄として出力するように変更
