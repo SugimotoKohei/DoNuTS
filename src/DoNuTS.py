@@ -151,12 +151,12 @@ class create_csv:
 
     def create_pet_df (self):
         '''self.pet_fileから必要なheader情報だけ抜き出してpet_dfとして保存'''
-        pet_col_name = ['PatientName', 'PatientID', 'StudyDate','RadionuclideTotalDose']
+        pet_col_name = ['PatientID', 'StudyDate','RadionuclideTotalDose']
         self.pet_df = pd.DataFrame(columns=pet_col_name)
 
         for file in self.pet_file:
             pet_tmp_data = []
-            for col in pet_col_name[0:3]:
+            for col in pet_col_name[0:2]:
                 pet_tmp_data.append(str(getattr(file, col)))
             pet_tmp_data.append(file.RadiopharmaceuticalInformationSequence[0].RadionuclideTotalDose)
             tmp_se = pd.Series(pet_tmp_data, index=pet_col_name)
