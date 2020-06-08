@@ -15,18 +15,38 @@ DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cm
 1. 処理終了後、4で選択したフォルダ内に**処理を行った日付.csv**としてcsvで抽出したデータが保存されます  
 
 ## 抽出する線量情報と患者情報
-- mean CTDIvol  
-- DLP  
-- Acquisition Protocol  
-- Patient ID  
-- Study Date  
-- Patient Name  
-- Study Description  
-- Patient BirthDate  
-- Patient Sex  
-- Patient Age  
-- Patient Size  
-- Patient Weight  
+- Mean CTDIvol
+- DLP
+- X-Ray Modulation Type
+- CTDIw Phantom Type
+- Acquisition Protocol
+- Target Region
+- CT Acquisition Type
+- Procedure Context
+- Exposure Time
+- Scanning Length
+- Exposed Range
+- Nominal Single Collimation Width
+- Nominal Total Collimation Width
+- Pitch Factor
+- Identification of the X-Ray Source
+- KVP
+- Maximum X-Ray Tube Current
+- Mean X-Ray Tube Current
+- Exposure Time per Rotation
+- Device Manufacturer
+- Device Serial Number
+- Manufacturer Model Name
+- Patient ID
+- Study Date
+- Patient Name
+- Study Description
+- Patient BirthDate
+- Patient Sex
+- Patient Age
+- Patient Size
+- Patient Weight
+- CT Dose Length Product Total
 - Radionuclide Total Dose　(only PET/CT)  
 
 ## 想定される使い方
@@ -37,7 +57,8 @@ DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cm
 [被ばく線量情報抽出ソフト『DoNuTS』を作りました - 放射線技術×データサイエンス](https://radmodel.hatenablog.com/entry/2020/04/07/175556)
 
 ## 検証装置
-SIEMENS製のRDSRとPET画像については検証済み
+- CanonのCT装置のRDSR
+- SiemensのCT装置のRDSRとPET/CT装置のRDSRとPET画像
 
 ## ソースコードの実行環境
 | ソフトやパッケージ名 | 開発時点 | 現状 |
@@ -62,3 +83,4 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 ### 修正履歴
 2020.5.1 線量関連情報に空欄があった際に，空欄として出力するように変更  
 2020.5.19 CTとPETの線量情報を結合する際のターゲットに，名前を使用しないように変更
+2020.6.8 大幅なコードの変更により取得データ数の大幅な増加
