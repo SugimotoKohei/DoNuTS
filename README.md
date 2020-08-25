@@ -3,7 +3,7 @@
 ![DoNuTS](https://user-images.githubusercontent.com/33772302/74533233-71119600-4f74-11ea-9348-e21f60da4957.png)
 
 ## DoNuTSとは？
-DoNuTSとはRDSR(Radiation Dose Structual Report)とDICOM(Digital Imaging and Cmmunications in Medicine)ヘッダーから線量情報と患者情報を抽出するオープンソースソフトウェアです．Windows上で動作します．
+DoNuTSとはRDSR(Radiation Dose Structured Report)とDICOM(Digital Imaging and Cmmunications in Medicine)ヘッダーから線量情報と患者情報を抽出するオープンソースソフトウェアです．Windows上で動作します．
 
 
 ## DoNuTSの使い方
