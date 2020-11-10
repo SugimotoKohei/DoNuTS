@@ -70,6 +70,7 @@ def extract_data_from_CT_Acquisition(rdsr_col, CTAcquisition):
     CTXraySourceParameters_code = '113831'
     CTDose_code = '113829'
     DeviceRoleinProcedure_code = '113876'
+    DoseCheckNotificationDetails_code = '113908'
 
     # 空の辞書tmpを作成
     tmp_dictionary = {col:[] for col in rdsr_col.keys()}
@@ -104,7 +105,7 @@ def extract_data_from_CT_Acquisition(rdsr_col, CTAcquisition):
                                 for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
                                     if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['IdentificationoftheXRaySource']:
                                         tmp_dictionary['IdentificationoftheXRaySource'] = nest3[0x0040,0xa160].value
-                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['KVP']:
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['KVP']:
                                         tmp_dictionary['KVP'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
                                     elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MaximumXRayTubeCurrent']:
                                         tmp_dictionary['MaximumXRayTubeCurrent'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
@@ -125,8 +126,21 @@ def extract_data_from_CT_Acquisition(rdsr_col, CTAcquisition):
                             tmp_dictionary['CTDIwPhantomType'] = nest2[0x0040,0xa168][0][0x0008,0x0104].value
                         elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLP']:
                             tmp_dictionary['DLP'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == DoseCheckNotificationDetails_code:
+                            try:
+                                for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
+                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLPNotificationValue']:
+                                            tmp_dictionary['DLPNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['CTDIvolNotificationValue']:
+                                        tmp_dictionary['CTDIvolNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ReasonforProceeding']:
+                                        tmp_dictionary['ReasonforProceeding'] = nest3[0x0040,0xa160].value
+                            except:
+                                pass
                 except:
                     pass
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['Comment']:
+                tmp_dictionary['Comment'] = nest1[0x0040,0xa160].value
             elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['XRayModulationType']:
                 tmp_dictionary['XRayModulationType'] = nest1[0x0040,0xa160].value
             elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == DeviceRoleinProcedure_code:
@@ -246,11 +260,12 @@ def main():
         # CT_Acquisition_setから線量情報を抽出し辞書にまとめる
         # 取得するデータ一覧
         rdsr_col = {
-            'MeanCTDIvol':'113830', 'DLP':'113838', 'XRayModulationType':'113842', 'CTDIwPhantomType':'113835', 
+            'MeanCTDIvol':'113830', 'DLP':'113838', 'Comment':'121106', 'XRayModulationType':'113842', 'CTDIwPhantomType':'113835', 
             'AcquisitionProtocol':'125203', 'TargetRegion':'123014', 'CTAcquisitionType':'113820', 'ProcedureContext':'G-C32C',
             'ExposureTime':'113824', 'ScanningLength':'113825', 'ExposedRange':'113899', 'NominalSingleCollimationWidth':'113826', 'NominalTotalCollimationWidth':'113827', 'PitchFactor':'113828',
             'IdentificationoftheXRaySource':'113832', 'KVP':'113733', 'MaximumXRayTubeCurrent':'113833', 'MeanXRayTubeCurrent':'113734', 'ExposureTimeperRotation':'113834', 
-            'DeviceManufacturer':'113878', 'DeviceSerialNumber':'113880'
+            'DeviceManufacturer':'113878', 'DeviceSerialNumber':'113880',
+            'DLPNotificationValue':'113911', 'CTDIvolNotificationValue':'113912', 'ReasonforProceeding':'113907'
         }
         # 取得するデータを入れるdictionaryを作成
         rdsr_dictionary = {col:[] for col in rdsr_col.keys()}
