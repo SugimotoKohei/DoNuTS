@@ -69,7 +69,7 @@ DoNuTSとはRDSR(Radiation Dose Structured Report)とDICOM(Digital Imaging and C
 
 - CanonのCT装置のRDSR
 - SiemensのCT装置のRDSRとPET/CT装置のRDSRとPET画像
-- PillipsのCT装置のRDSR
+- PhillipsのCT装置のRDSR
 
 ## ソースコードの実行環境
 
@@ -98,5 +98,5 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 
 2020.5.1 線量関連情報に空欄があった際に，空欄として出力するように変更  
 2020.5.19 CTとPETの線量情報を結合する際のターゲットに，名前を使用しないように変更  
-2020.6.8 大幅なコードの変更により取得データ数の大幅な増加
+2020.6.8 大幅なコードの変更により取得データ数の大幅な増加  
 2020.11.10 出力項目を4つ増加し，Phillips装置のRDSRで動作を確認
