@@ -23,7 +23,7 @@ def get_file_path(directory):
     '''ディレクトリを入力し、ディレクトリ内のファイルのパスをすべて出力'''
     if directory == '':
         sys.exit(0)
-    path_of_files = glob.glob(directory + '\\**\\*', recursive=True)
+    path_of_files = glob.glob(directory + '/**/*', recursive=True)
     return  path_of_files
 
 def get_dicom_path(path):
@@ -229,7 +229,8 @@ def merge_rdsr_and_pet(rdsr_df, pet_df):
 def main():
     '''各関数を実施し，RDSRとPETのデータをcsvとして出力'''
     print('**************************処理開始****************************')
-    desktop_dir = os.getenv('HOMEDRIVE') + os.getenv('HOMEPATH') + '/Desktop'
+    # desktop_dir = os.getenv('HOMEDRIVE') + os.getenv('HOMEPATH') + '/Desktop'
+    desktop_dir = os.path.expanduser("~") + '/Desktop'
     dicom_directory = select_directory(desktop_dir)
     path_of_files = get_file_path(dicom_directory)
     dicom_files = get_dicom_path(path_of_files)
