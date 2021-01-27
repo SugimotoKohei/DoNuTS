@@ -82,13 +82,23 @@ DoNuTSとはRDSR(Radiation Dose Structured Report)とDICOM(Digital Imaging and C
 | pyinstaller | 4.0.dev0+55c8855d9d | 4.0.dev0+55c8855d9d |
 | tqdm | 4.42.0 | 4.42.0 |
 
-## exe化
+## 実行ファイルの作成
 
-本ソフトウェアのexe化には`pyinstaller`を使用しました．開発版を使用することでWindows7の端末でも動作することを確認しました．もし，ソースコードを編集してexe化を行う場合，`DoNuTS.py`が存在するディレクトリに移動して
+### Windowsの場合
+
+本ソフトウェアの実行ファイルの作成（exe化）には`pyinstaller`を使用しました．開発版を使用することでWindows7の端末でも動作することを確認しました．もし，ソースコードを編集してexe化を行う場合，`DoNuTS.py`が存在するディレクトリに移動して，以下のコマンドを入力してください．
 ```
+# windows
 pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 ```
-でexe化を行うことができます．
+
+### Macの場合
+
+Macの場合，以下のコマンドを入力してください．
+```
+# mac
+pyinstaller --onefile --windowed --clean --icon DoNuTS.ico --name DoNuTS DoNuTS.py
+```
 
 ## その他
 
@@ -99,4 +109,4 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 2020.5.1 線量関連情報に空欄があった際に，空欄として出力するように変更  
 2020.5.19 CTとPETの線量情報を結合する際のターゲットに，名前を使用しないように変更  
 2020.6.8 大幅なコードの変更により取得データ数の大幅な増加  
-2020.11.10 出力項目を4つ増加し，Phillips装置のRDSRで動作を確認
+2020.11.10 出力項目を4つ増加し，Philips装置のRDSRで動作を確認
