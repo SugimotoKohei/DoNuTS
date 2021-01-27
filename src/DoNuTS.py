@@ -53,7 +53,6 @@ def separate_dicom_files(dicom_files):
                 pet_files.append(f)
         except:
             pass
-
     return rdsr_files, pet_files
 
 
@@ -62,7 +61,7 @@ def separate_CT_Acquisition(rdsr_files):
     CTAcquisition = []
     for r in rdsr_files[0x0040, 0xa730].value:
         try:
-            if r[0x0040, 0xa043][0][0x0008, 0x0100].value == '113819':  # CTAcquisition_cod
+            if r[0x0040, 0xa043][0][0x0008, 0x0100].value == '113819':  # CTAcquisition_code
                 CTAcquisition.append(r[0x0040, 0xa730])
         except:
             pass
@@ -199,8 +198,7 @@ def get_events_from_rdsr(rdsr_files):
     for _, r in enumerate(rdsr_files[0x0040, 0xa730].value):
         try:
             if r[0x0040, 0xa730][0][0x0040, 0xa043][0][0x0008, 0x0100].value == TotalNumberofIrradiationEvents_code:
-                events = r[0x0040, 0xa730][0][0x0040,
-                                              0xa300][0][0x0040, 0xa30a].value
+                events = r[0x0040, 0xa730][0][0x0040,0xa300][0][0x0040, 0xa30a].value
         except:
             pass
     return events
@@ -214,8 +212,7 @@ def extract_CT_Dose_Length_Product_Total(rdsr_files):
     for _, r in enumerate(rdsr_files[0x0040, 0xa730].value):
         try:
             if r[0x0040, 0xa730][1][0x0040, 0xa043][0][0x0008, 0x0100].value == CTDoseLengthProductTotal_code:
-                CDLPT = r[0x0040, 0xa730][1][0x0040,
-                                             0xa300][0][0x0040, 0xa30a].value
+                CDLPT = r[0x0040, 0xa730][1][0x0040,0xa300][0][0x0040, 0xa30a].value
         except:
             pass
     return CDLPT
@@ -234,7 +231,6 @@ def extract_data_from_rdsr_header(rdsr_header_col_names, rdsr_files, events):
                         str(getattr(rdsr, name)))
                 except:
                     tmp_header_dictionary[name].append(" ")
-
     return tmp_header_dictionary
 
 
@@ -254,7 +250,6 @@ def extract_information_from_PET(PET):
 
     pet_df = pet_df[~pet_df.duplicated()]
     pet_df.reset_index(inplace=True, drop=True)
-
     return pet_df
 
 
@@ -355,8 +350,7 @@ def main():
         gc.collect()
 
     # 最初に選択したdirectoryにcsvとしてデータを出力
-    rdsr_df.to_csv(dicom_directory + '/' + str(datetime.date.today()
-                                               ) + '.csv', index=False, encoding='cp932')
+    rdsr_df.to_csv(dicom_directory + '/' + str(datetime.date.today()) + '.csv', index=False, encoding='cp932')
 
     print('**************************処理完了****************************')
     messagebox.showinfo('処理完了', str(dicom_directory)+'にデータが保存されました')
