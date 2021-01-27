@@ -2,10 +2,11 @@
 *.zip
 *.pkg
 *.html
-*.txt
 *.spec
 *.manifest
 *.pyz
 __pycache__/
 .vscode/*
 *.DS_Store
+src/build/
+src/dist/
