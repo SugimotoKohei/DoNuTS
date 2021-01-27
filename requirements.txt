@@ -1,0 +1,14 @@
+altgraph==0.17
+autopep8==1.5.4
+macholib==1.14
+numpy==1.19.4
+pandas==1.1.5
+pycodestyle==2.6.0
+pydicom==2.1.2
+pyinstaller==4.1
+pyinstaller-hooks-contrib==2020.11
+python-dateutil==2.8.1
+pytz==2020.4
+six==1.15.0
+toml==0.10.2
+tqdm==4.54.1
