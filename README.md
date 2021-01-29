@@ -83,7 +83,7 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 
 ## その他
 
-バグの報告や追加機能のご希望のは[issues](https://github.com/radmodel/DoNuTS/issues)までお願いします．
+バグの報告や追加機能のご希望は[issues](https://github.com/radmodel/DoNuTS/issues)までお願いします．
 
 ### 修正履歴
 
