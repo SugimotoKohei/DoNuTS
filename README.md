@@ -14,7 +14,7 @@ DoNuTSとはRDSR(Radiation Dose Structured Report)とDICOM(Digital Imaging and C
 2. zipファイルをダウンロード
     1. windowsの場合 → DoNuTS_v0.1.0_windows.zip
     2. macの場合 → DoNuTS_v0.1.0_mac.zip
-3. zipファイルを解凍後，**DoNuTS.exe（もしくはDoNuTS.app）**をダブルクリック
+3. zipファイルを解凍後，**DoNuTS.exe**もしくは**DoNuTS.app**をダブルクリック
 4. ポップアップが表示され、あらかじめPC内に保存してあるRDSRやDICOMファイルが入ったフォルダを選択
 5. 処理が開始
 6. 処理終了後、4で選択したフォルダ内に**処理を行った日付.csv**としてcsvで抽出したデータが保存されます  
@@ -91,4 +91,4 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 2020.05.19 CTとPETの線量情報を結合する際のターゲットに，名前を使用しないように変更  
 2020.06.08 大幅なコードの変更により取得データ数の大幅な増加  
 2020.11.10 出力項目を4つ増加し，Philips装置のRDSRで動作を確認  
-2021.01.30 Macでも動作するように修正し，Releaseから実行ファイルのダウンロードするように変更
+2021.01.30 Macでも動作するように修正し，Releaseから実行ファイルをダウンロードするように変更
