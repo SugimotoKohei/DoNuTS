@@ -59,10 +59,10 @@ def separate_dicom_files(dicom_files):
 def separate_CT_Acquisition(rdsr_files):
     '''RDSRファイルのデータを入力し，CTの線量情報が記載されたレベルのネストの情報を出力する'''
     CTAcquisition = []
-    for r in rdsr_files[0x0040, 0xa730].value:
+    for r in rdsr_files[0x0040,0xa730].value:
         try:
-            if r[0x0040, 0xa043][0][0x0008, 0x0100].value == '113819':  # CTAcquisition_code
-                CTAcquisition.append(r[0x0040, 0xa730])
+            if r[0x0040,0xa043][0][0x0008,0x0100].value == '113819':  # CTAcquisition_code
+                CTAcquisition.append(r[0x0040,0xa730])
         except:
             pass
     return CTAcquisition
@@ -82,101 +82,79 @@ def extract_data_from_CT_Acquisition(rdsr_col, CTAcquisition):
 
     for _, nest1 in enumerate(CTAcquisition.value):
         try:
-            if nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['AcquisitionProtocol']:
-                tmp_dictionary['AcquisitionProtocol'] = (
-                    nest1[0x0040, 0xa160].value)
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['TargetRegion']:
-                tmp_dictionary['TargetRegion'] = nest1[0x0040,
-                                                       0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['CTAcquisitionType']:
-                tmp_dictionary['CTAcquisitionType'] = nest1[0x0040,
-                                                            0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ProcedureContext']:
-                tmp_dictionary['ProcedureContext'] = nest1[0x0040,
-                                                           0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == CTAcquisitionParameters_code:
+            if nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['AcquisitionProtocol']:
+                tmp_dictionary['AcquisitionProtocol'] = nest1[0x0040, 0xa160].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['TargetRegion']:
+                tmp_dictionary['TargetRegion'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['CTAcquisitionType']:
+                tmp_dictionary['CTAcquisitionType'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ProcedureContext']:
+                tmp_dictionary['ProcedureContext'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == CTAcquisitionParameters_code:
                 try:
-                    for _, nest2 in enumerate(nest1[0x0040, 0xa730].value):
-                        if nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ExposureTime']:
-                            tmp_dictionary['ExposureTime'] = nest2[0x0040,
-                                                                   0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ScanningLength']:
-                            tmp_dictionary['ScanningLength'] = nest2[0x0040,
-                                                                     0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ExposedRange']:
-                            tmp_dictionary['ExposedRange'] = nest2[0x0040,
-                                                                   0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['NominalSingleCollimationWidth']:
-                            tmp_dictionary['NominalSingleCollimationWidth'] = nest2[0x0040,
-                                                                                    0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['NominalTotalCollimationWidth']:
-                            tmp_dictionary['NominalTotalCollimationWidth'] = nest2[0x0040,
-                                                                                   0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['PitchFactor']:
-                            tmp_dictionary['PitchFactor'] = nest2[0x0040,
-                                                                  0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == CTXraySourceParameters_code:
+                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
+                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposureTime']:
+                            tmp_dictionary['ExposureTime'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ScanningLength']:
+                            tmp_dictionary['ScanningLength'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposedRange']:
+                            tmp_dictionary['ExposedRange'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['NominalSingleCollimationWidth']:
+                            tmp_dictionary['NominalSingleCollimationWidth'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['NominalTotalCollimationWidth']:
+                            tmp_dictionary['NominalTotalCollimationWidth'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['PitchFactor']:
+                            tmp_dictionary['PitchFactor'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == CTXraySourceParameters_code:
                             try:
-                                for _, nest3 in enumerate(nest2[0x0040, 0xa730].value):
-                                    if nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['IdentificationoftheXRaySource']:
-                                        tmp_dictionary['IdentificationoftheXRaySource'] = nest3[0x0040, 0xa160].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['KVP']:
-                                        tmp_dictionary['KVP'] = nest3[0x0040,
-                                                                      0xa300][0][0x0040, 0xa30a].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['MaximumXRayTubeCurrent']:
-                                        tmp_dictionary['MaximumXRayTubeCurrent'] = nest3[0x0040,
-                                                                                         0xa300][0][0x0040, 0xa30a].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['MeanXRayTubeCurrent']:
-                                        tmp_dictionary['MeanXRayTubeCurrent'] = nest3[0x0040,
-                                                                                      0xa300][0][0x0040, 0xa30a].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ExposureTimeperRotation']:
-                                        tmp_dictionary['ExposureTimeperRotation'] = nest3[0x0040,
-                                                                                          0xa300][0][0x0040, 0xa30a].value
+                                for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
+                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['IdentificationoftheXRaySource']:
+                                        tmp_dictionary['IdentificationoftheXRaySource'] = nest3[0x0040,0xa160].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['KVP']:
+                                        tmp_dictionary['KVP'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MaximumXRayTubeCurrent']:
+                                        tmp_dictionary['MaximumXRayTubeCurrent'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MeanXRayTubeCurrent']:
+                                        tmp_dictionary['MeanXRayTubeCurrent'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposureTimeperRotation']:
+                                        tmp_dictionary['ExposureTimeperRotation'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
                             except:
                                 pass
                 except:
                     pass
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == CTDose_code:
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == CTDose_code:
                 try:
-                    for _, nest2 in enumerate(nest1[0x0040, 0xa730].value):
-                        if nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['MeanCTDIvol']:
-                            tmp_dictionary['MeanCTDIvol'] = nest2[0x0040,
-                                                                  0xa300][0][0x0040, 0xa30a].value
+                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
+                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MeanCTDIvol']:
+                            tmp_dictionary['MeanCTDIvol'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
                         elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['CTDIwPhantomType']:
-                            tmp_dictionary['CTDIwPhantomType'] = nest2[0x0040,
-                                                                       0xa168][0][0x0008, 0x0104].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['DLP']:
-                            tmp_dictionary['DLP'] = nest2[0x0040,
-                                                          0xa300][0][0x0040, 0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == DoseCheckNotificationDetails_code:
+                            tmp_dictionary['CTDIwPhantomType'] = nest2[0x0040,0xa168][0][0x0008,0x0104].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLP']:
+                            tmp_dictionary['DLP'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == DoseCheckNotificationDetails_code:
                             try:
-                                for _, nest3 in enumerate(nest2[0x0040, 0xa730].value):
-                                    if nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['DLPNotificationValue']:
-                                        tmp_dictionary['DLPNotificationValue'] = nest3[0x0040,
-                                                                                       0xa300][0][0x0040, 0xa30a].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['CTDIvolNotificationValue']:
-                                        tmp_dictionary['CTDIvolNotificationValue'] = nest3[0x0040,
-                                                                                           0xa300][0][0x0040, 0xa30a].value
-                                    elif nest3[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['ReasonforProceeding']:
-                                        tmp_dictionary['ReasonforProceeding'] = nest3[0x0040, 0xa160].value
+                                for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
+                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLPNotificationValue']:
+                                        tmp_dictionary['DLPNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['CTDIvolNotificationValue']:
+                                        tmp_dictionary['CTDIvolNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
+                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ReasonforProceeding']:
+                                        tmp_dictionary['ReasonforProceeding'] = nest3[0x0040,0xa160].value
                             except:
                                 pass
                 except:
                     pass
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['Comment']:
-                tmp_dictionary['Comment'] = nest1[0x0040, 0xa160].value
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['XRayModulationType']:
-                tmp_dictionary['XRayModulationType'] = nest1[0x0040,
-                                                             0xa160].value
-            elif nest1[0x0040, 0xa043][0][0x0008, 0x0100].value == DeviceRoleinProcedure_code:
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['Comment']:
+                tmp_dictionary['Comment'] = nest1[0x0040,0xa160].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['XRayModulationType']:
+                tmp_dictionary['XRayModulationType'] = nest1[0x0040,0xa160].value
+            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == DeviceRoleinProcedure_code:
                 try:
-                    for _, nest2 in enumerate(nest1[0x0040, 0xa730].value):
-                        if nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['DeviceManufacturer']:
-                            tmp_dictionary['DeviceManufacturer'] = nest2[0x0040,
-                                                                         0xa160].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['DeviceSerialNumber']:
-                            tmp_dictionary['DeviceSerialNumber'] = nest2[0x0040,
-                                                                         0xa160].value
+                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
+                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DeviceManufacturer']:
+                            tmp_dictionary['DeviceManufacturer'] = nest2[0x0040,0xa160].value
+                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DeviceSerialNumber']:
+                            tmp_dictionary['DeviceSerialNumber'] = nest2[0x0040,0xa160].value
                 except:
                     pass
         except:
@@ -195,10 +173,10 @@ def get_events_from_rdsr(rdsr_files):
     # EventsのEV
     TotalNumberofIrradiationEvents_code = '113812'
 
-    for _, r in enumerate(rdsr_files[0x0040, 0xa730].value):
+    for _, r in enumerate(rdsr_files[0x0040,0xa730].value):
         try:
-            if r[0x0040, 0xa730][0][0x0040, 0xa043][0][0x0008, 0x0100].value == TotalNumberofIrradiationEvents_code:
-                events = r[0x0040, 0xa730][0][0x0040,0xa300][0][0x0040, 0xa30a].value
+            if r[0x0040,0xa730][0][0x0040,0xa043][0][0x0008,0x0100].value == TotalNumberofIrradiationEvents_code:
+                events = r[0x0040,0xa730][0][0x0040,0xa300][0][0x0040,0xa30a].value
         except:
             pass
     return events
@@ -209,10 +187,10 @@ def extract_CT_Dose_Length_Product_Total(rdsr_files):
     # CT Dose Length Product TotalのEV
     CTDoseLengthProductTotal_code = '113813'
 
-    for _, r in enumerate(rdsr_files[0x0040, 0xa730].value):
+    for _, r in enumerate(rdsr_files[0x0040,0xa730].value):
         try:
-            if r[0x0040, 0xa730][1][0x0040, 0xa043][0][0x0008, 0x0100].value == CTDoseLengthProductTotal_code:
-                CDLPT = r[0x0040, 0xa730][1][0x0040,0xa300][0][0x0040, 0xa30a].value
+            if r[0x0040,0xa730][1][0x0040,0xa043][0][0x0008,0x0100].value == CTDoseLengthProductTotal_code:
+                CDLPT = r[0x0040,0xa730][1][0x0040,0xa300][0][0x0040,0xa30a].value
         except:
             pass
     return CDLPT
