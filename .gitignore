@@ -1,12 +1,21 @@
+# OS / Editor
+.DS_Store
+.vscode/
 *.toc
 *.zip
 *.pkg
 *.html
+
+# Python / Build
+__pycache__/
 *.spec
 *.manifest
 *.pyz
-__pycache__/
-.vscode/*
-*.DS_Store
 src/build/
 src/dist/
+src/*.egg-info/
+.venv/
+
+# Project Data
+data/
+output/
