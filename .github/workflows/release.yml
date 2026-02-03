@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Bump type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.version.outputs.new_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        run: |
+          # Read current version from pyproject.toml
+          CURRENT_VERSION=$(grep 'version = ' pyproject.toml | head -n 1 | cut -d '"' -f 2)
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Calculate new version
+          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+          BUMP_TYPE="${{ inputs.bump_type }}"
+          
+          if [ "$BUMP_TYPE" == "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "$BUMP_TYPE" == "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+          
+          NEW_VERSION="$major.$minor.$patch"
+          NEW_TAG="v$NEW_VERSION"
+          echo "New version: $NEW_VERSION"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          
+          # Update pyproject.toml
+          sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
+          
+          # Commit and Push
+          git add pyproject.toml
+          git commit -m "chore: release $NEW_VERSION [skip ci]"
+          git tag $NEW_TAG
+          git push origin HEAD:develop
+          git push origin $NEW_TAG
+
+  build-and-release:
+    needs: bump-version
+    name: Build and Release
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_path: dist/DoNuTS.exe
+            build_cmd: pyinstaller --onefile --windowed --name DoNuTS src/DoNuTS.py
+          - os: macos-latest
+            artifact_path: dist/DoNuTS_macOS.zip
+            build_cmd: |
+              pyinstaller --onedir --windowed --name DoNuTS src/DoNuTS.py
+              cd dist
+              ditto -c -k --sequesterRsrc --keepParent DoNuTS.app DoNuTS_macOS.zip
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump-version.outputs.new_tag }}
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv sync --system
+      
+      - name: Build
+        run: ${{ matrix.build_cmd }}
+      
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.bump-version.outputs.new_tag }}
+          files: ${{ matrix.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
