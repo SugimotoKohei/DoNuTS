@@ -110,4 +110,5 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 2021.01.30 Macでも動作するように修正し，Releaseから実行ファイルをダウンロードするように変更  
 2021.02.12 Release上のwindows用の実行ファイルが空であったため，再アップロード（A様報告ありがとうございました）  
 2026.10.23 RDSRごとのイベント数とCT Acquisition数が一致しない場合に患者情報の行がずれる不具合，PETのみのフォルダで異常終了する不具合，値が0の項目が空欄になる不具合を修正  
-2026.10.23 Python 3.11以上・pandas 3・pydicom 3に対応．cp932で表せない文字を含む場合はBOM付きUTF-8でcsvを出力するように変更
+2026.10.23 Python 3.11以上・pandas 3・pydicom 3に対応．cp932で表せない文字を含む場合はBOM付きUTF-8でcsvを出力するように変更  
+2026.10.23 SRの読み取り処理を整理し，新しい装置で使われるSNOMED CTコードのProcedure Contextに対応

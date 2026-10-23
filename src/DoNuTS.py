@@ -62,143 +62,126 @@ def separate_dicom_files(dicom_files):
     return rdsr_files, pet_files
 
 
+# SRのコード
+CT_ACQUISITION_CODE = '113819'
+CT_ACCUMULATED_DOSE_DATA_CODE = '113811'
+CT_DOSE_LENGTH_PRODUCT_TOTAL_CODE = '113813'
+
+# CT Acquisitionの下にあるコンテナのコード
+CT_ACQUISITION_PARAMETERS = '113822'
+CT_XRAY_SOURCE_PARAMETERS = '113831'
+CT_DOSE = '113829'
+DOSE_CHECK_NOTIFICATION_DETAILS = '113908'
+DEVICE_ROLE_IN_PROCEDURE = '113876'
+
+# 新しい装置ではSRTコードの代わりにSNOMED CTコードが使われるため、SRTコードに読み替える
+CODE_ALIASES = {'408730004': 'G-C32C'}  # Procedure Context
+
+# CT Acquisitionから取得するデータ一覧
+# 列名: (CT Acquisitionからのコードの経路, 値の種類)
+# 値の種類 NUM: 数値, TEXT: テキスト, CODE: コードの意味
+CT_ACQUISITION_FIELDS = {
+    'MeanCTDIvol': ((CT_DOSE, '113830'), 'NUM'),
+    'DLP': ((CT_DOSE, '113838'), 'NUM'),
+    'Comment': (('121106',), 'TEXT'),
+    'XRayModulationType': (('113842',), 'TEXT'),
+    'CTDIwPhantomType': ((CT_DOSE, '113835'), 'CODE'),
+    'AcquisitionProtocol': (('125203',), 'TEXT'),
+    'TargetRegion': (('123014',), 'CODE'),
+    'CTAcquisitionType': (('113820',), 'CODE'),
+    'ProcedureContext': (('G-C32C',), 'CODE'),
+    'ExposureTime': ((CT_ACQUISITION_PARAMETERS, '113824'), 'NUM'),
+    'ScanningLength': ((CT_ACQUISITION_PARAMETERS, '113825'), 'NUM'),
+    'ExposedRange': ((CT_ACQUISITION_PARAMETERS, '113899'), 'NUM'),
+    'NominalSingleCollimationWidth': ((CT_ACQUISITION_PARAMETERS, '113826'), 'NUM'),
+    'NominalTotalCollimationWidth': ((CT_ACQUISITION_PARAMETERS, '113827'), 'NUM'),
+    'PitchFactor': ((CT_ACQUISITION_PARAMETERS, '113828'), 'NUM'),
+    'IdentificationoftheXRaySource': ((CT_ACQUISITION_PARAMETERS, CT_XRAY_SOURCE_PARAMETERS, '113832'), 'TEXT'),
+    'KVP': ((CT_ACQUISITION_PARAMETERS, CT_XRAY_SOURCE_PARAMETERS, '113733'), 'NUM'),
+    'MaximumXRayTubeCurrent': ((CT_ACQUISITION_PARAMETERS, CT_XRAY_SOURCE_PARAMETERS, '113833'), 'NUM'),
+    'MeanXRayTubeCurrent': ((CT_ACQUISITION_PARAMETERS, CT_XRAY_SOURCE_PARAMETERS, '113734'), 'NUM'),
+    'ExposureTimeperRotation': ((CT_ACQUISITION_PARAMETERS, CT_XRAY_SOURCE_PARAMETERS, '113834'), 'NUM'),
+    'DeviceManufacturer': ((DEVICE_ROLE_IN_PROCEDURE, '113878'), 'TEXT'),
+    'DeviceSerialNumber': ((DEVICE_ROLE_IN_PROCEDURE, '113880'), 'TEXT'),
+    'DLPNotificationValue': ((CT_DOSE, DOSE_CHECK_NOTIFICATION_DETAILS, '113911'), 'NUM'),
+    'CTDIvolNotificationValue': ((CT_DOSE, DOSE_CHECK_NOTIFICATION_DETAILS, '113912'), 'NUM'),
+    'ReasonforProceeding': ((CT_DOSE, DOSE_CHECK_NOTIFICATION_DETAILS, '113907'), 'TEXT'),
+}
+
+# RDSRのヘッダーから取得するデータ一覧
+RDSR_HEADER_FIELDS = ['ManufacturerModelName', 'PatientID', 'StudyDate', 'PatientName',
+                      'StudyDescription', 'PatientBirthDate', 'PatientSex', 'PatientAge', 'PatientSize', 'PatientWeight']
+
+
+def concept_code(item):
+    '''Content Sequenceの項目のConcept Nameのコードを返す'''
+    try:
+        code = item.ConceptNameCodeSequence[0].CodeValue
+    except MISSING_ERRORS:
+        return None
+    return CODE_ALIASES.get(code, code)
+
+
+def children(item):
+    '''項目の下にあるContent Sequenceを返す'''
+    return item.get('ContentSequence') or []
+
+
+def find_items(items, path):
+    '''pathのコードを順に辿り、一致する項目を全て文書順に返す'''
+    for item in items:
+        if concept_code(item) == path[0]:
+            if len(path) == 1:
+                yield item
+            else:
+                yield from find_items(children(item), path[1:])
+
+
 def find_content(items, code):
     '''Content Sequenceの中から、Concept Nameのコードが一致する最初の項目を返す'''
-    for item in items:
-        try:
-            if item[0x0040,0xa043][0][0x0008,0x0100].value == code:
-                return item
-        except MISSING_ERRORS:
-            pass
-    return None
+    return next(find_items(items, (code,)), None)
+
+
+def read_value(item, value_type):
+    '''項目から値の種類に応じた値を取り出す'''
+    if value_type == 'NUM':
+        return item.MeasuredValueSequence[0].NumericValue
+    if value_type == 'TEXT':
+        return item.TextValue
+    return item.ConceptCodeSequence[0].CodeMeaning
 
 
 def separate_CT_Acquisition(rdsr_file):
-    '''RDSRファイルのデータを入力し，CTの線量情報が記載されたレベルのネストの情報を出力する'''
-    CTAcquisition = []
-    try:
-        content = rdsr_file[0x0040,0xa730].value
-    except MISSING_ERRORS:
-        return CTAcquisition
-    for r in content:
-        try:
-            if r[0x0040,0xa043][0][0x0008,0x0100].value == '113819':  # CTAcquisition_code
-                CTAcquisition.append(r[0x0040,0xa730])
-        except MISSING_ERRORS:
-            pass
-    return CTAcquisition
+    '''RDSRファイルのデータを入力し，CT AcquisitionごとのContent Sequenceのリストを出力する'''
+    return [children(item) for item in find_items(children(rdsr_file), (CT_ACQUISITION_CODE,))]
 
 
-def extract_data_from_CT_Acquisition(rdsr_col, CTAcquisition):
-    '''1つのCT Acquisitionを入力し，そのデータを辞書で返す'''
-    # 各データの区切り部分のEV
-    CTAcquisitionParameters_code = '113822'
-    CTXraySourceParameters_code = '113831'
-    CTDose_code = '113829'
-    DeviceRoleinProcedure_code = '113876'
-    DoseCheckNotificationDetails_code = '113908'
+def extract_data_from_CT_Acquisition(CTAcquisition):
+    '''1つのCT AcquisitionのContent Sequenceを入力し，そのデータを辞書で返す
 
-    # 空の辞書tmpを作成
-    tmp_dictionary = {col: None for col in rdsr_col.keys()}
-
-    for _, nest1 in enumerate(CTAcquisition.value):
-        try:
-            if nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['AcquisitionProtocol']:
-                tmp_dictionary['AcquisitionProtocol'] = nest1[0x0040, 0xa160].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['TargetRegion']:
-                tmp_dictionary['TargetRegion'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['CTAcquisitionType']:
-                tmp_dictionary['CTAcquisitionType'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ProcedureContext']:
-                tmp_dictionary['ProcedureContext'] = nest1[0x0040,0xa168][0][0x0008, 0x0104].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == CTAcquisitionParameters_code:
-                try:
-                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
-                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposureTime']:
-                            tmp_dictionary['ExposureTime'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ScanningLength']:
-                            tmp_dictionary['ScanningLength'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposedRange']:
-                            tmp_dictionary['ExposedRange'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['NominalSingleCollimationWidth']:
-                            tmp_dictionary['NominalSingleCollimationWidth'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['NominalTotalCollimationWidth']:
-                            tmp_dictionary['NominalTotalCollimationWidth'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['PitchFactor']:
-                            tmp_dictionary['PitchFactor'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == CTXraySourceParameters_code:
-                            try:
-                                for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
-                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['IdentificationoftheXRaySource']:
-                                        tmp_dictionary['IdentificationoftheXRaySource'] = nest3[0x0040,0xa160].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['KVP']:
-                                        tmp_dictionary['KVP'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MaximumXRayTubeCurrent']:
-                                        tmp_dictionary['MaximumXRayTubeCurrent'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MeanXRayTubeCurrent']:
-                                        tmp_dictionary['MeanXRayTubeCurrent'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ExposureTimeperRotation']:
-                                        tmp_dictionary['ExposureTimeperRotation'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                            except MISSING_ERRORS:
-                                pass
-                except MISSING_ERRORS:
-                    pass
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == CTDose_code:
-                try:
-                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
-                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['MeanCTDIvol']:
-                            tmp_dictionary['MeanCTDIvol'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040, 0xa043][0][0x0008, 0x0100].value == rdsr_col['CTDIwPhantomType']:
-                            tmp_dictionary['CTDIwPhantomType'] = nest2[0x0040,0xa168][0][0x0008,0x0104].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLP']:
-                            tmp_dictionary['DLP'] = nest2[0x0040,0xa300][0][0x0040,0xa30a].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == DoseCheckNotificationDetails_code:
-                            try:
-                                for _, nest3 in enumerate(nest2[0x0040,0xa730].value):
-                                    if nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DLPNotificationValue']:
-                                        tmp_dictionary['DLPNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['CTDIvolNotificationValue']:
-                                        tmp_dictionary['CTDIvolNotificationValue'] = nest3[0x0040,0xa300][0][0x0040,0xa30a].value
-                                    elif nest3[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['ReasonforProceeding']:
-                                        tmp_dictionary['ReasonforProceeding'] = nest3[0x0040,0xa160].value
-                            except MISSING_ERRORS:
-                                pass
-                except MISSING_ERRORS:
-                    pass
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['Comment']:
-                tmp_dictionary['Comment'] = nest1[0x0040,0xa160].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['XRayModulationType']:
-                tmp_dictionary['XRayModulationType'] = nest1[0x0040,0xa160].value
-            elif nest1[0x0040,0xa043][0][0x0008,0x0100].value == DeviceRoleinProcedure_code:
-                try:
-                    for _, nest2 in enumerate(nest1[0x0040,0xa730].value):
-                        if nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DeviceManufacturer']:
-                            tmp_dictionary['DeviceManufacturer'] = nest2[0x0040,0xa160].value
-                        elif nest2[0x0040,0xa043][0][0x0008,0x0100].value == rdsr_col['DeviceSerialNumber']:
-                            tmp_dictionary['DeviceSerialNumber'] = nest2[0x0040,0xa160].value
-                except MISSING_ERRORS:
-                    pass
-        except MISSING_ERRORS:
-            pass
-
-    # データが入っていない箇所を空欄とする（数値の0は空欄にしない）
-    for col in rdsr_col.keys():
-        if tmp_dictionary[col] is None or tmp_dictionary[col] == '':
-            tmp_dictionary[col] = ' '
-
-    return tmp_dictionary
+    同じ項目が複数ある場合（Dual Source CTのX線管など）は最後の値を使う
+    データが入っていない項目は空欄とする（数値の0は空欄にしない）
+    '''
+    data = {}
+    for col, (path, value_type) in CT_ACQUISITION_FIELDS.items():
+        value = ' '
+        for item in find_items(CTAcquisition, path):
+            try:
+                found = read_value(item, value_type)
+            except MISSING_ERRORS:
+                continue
+            if found is not None and found != '':
+                value = found
+        data[col] = value
+    return data
 
 
 def extract_CT_Dose_Length_Product_Total(rdsr_file):
     '''RDSRのCT Accumulated Dose DataからCT Dose Length Product Totalを抽出する'''
-    # CT Accumulated Dose DataとCT Dose Length Product TotalのEV
-    CTAccumulatedDoseData_code = '113811'
-    CTDoseLengthProductTotal_code = '113813'
-
+    total = find_content(children(rdsr_file), CT_ACCUMULATED_DOSE_DATA_CODE)
+    total = total and find_content(children(total), CT_DOSE_LENGTH_PRODUCT_TOTAL_CODE)
     try:
-        accumulated = find_content(rdsr_file[0x0040,0xa730].value, CTAccumulatedDoseData_code)
-        total = find_content(accumulated[0x0040,0xa730].value, CTDoseLengthProductTotal_code)
-        return total[0x0040,0xa300][0][0x0040,0xa30a].value
+        return read_value(total, 'NUM')
     except MISSING_ERRORS:
         return ' '
 
@@ -218,25 +201,14 @@ def build_rdsr_dataframe(rdsr_files):
     患者情報・CT Dose Length Product Totalは同じRDSRのCT Acquisitionの行にだけ付与するため、
     行がずれて別の患者の情報が付くことはない
     '''
-    # 取得するデータ一覧
-    rdsr_col = {
-        'MeanCTDIvol': '113830', 'DLP': '113838', 'Comment': '121106', 'XRayModulationType': '113842', 'CTDIwPhantomType': '113835',
-        'AcquisitionProtocol': '125203', 'TargetRegion': '123014', 'CTAcquisitionType': '113820', 'ProcedureContext': 'G-C32C',
-        'ExposureTime': '113824', 'ScanningLength': '113825', 'ExposedRange': '113899', 'NominalSingleCollimationWidth': '113826', 'NominalTotalCollimationWidth': '113827', 'PitchFactor': '113828',
-        'IdentificationoftheXRaySource': '113832', 'KVP': '113733', 'MaximumXRayTubeCurrent': '113833', 'MeanXRayTubeCurrent': '113734', 'ExposureTimeperRotation': '113834',
-        'DeviceManufacturer': '113878', 'DeviceSerialNumber': '113880',
-        'DLPNotificationValue': '113911', 'CTDIvolNotificationValue': '113912', 'ReasonforProceeding': '113907'
-    }
-    rdsr_header_col_names = ['ManufacturerModelName', 'PatientID', 'StudyDate', 'PatientName',
-                             'StudyDescription', 'PatientBirthDate', 'PatientSex', 'PatientAge', 'PatientSize', 'PatientWeight']
-    columns = list(rdsr_col.keys()) + rdsr_header_col_names + ['CTDoseLengthProductTotal']
+    columns = list(CT_ACQUISITION_FIELDS.keys()) + RDSR_HEADER_FIELDS + ['CTDoseLengthProductTotal']
 
     rows = []
     for r in rdsr_files:
-        header = extract_data_from_rdsr_header(rdsr_header_col_names, r)
+        header = extract_data_from_rdsr_header(RDSR_HEADER_FIELDS, r)
         CDLPT = extract_CT_Dose_Length_Product_Total(r)
         for acquisition in separate_CT_Acquisition(r):
-            row = extract_data_from_CT_Acquisition(rdsr_col, acquisition)
+            row = extract_data_from_CT_Acquisition(acquisition)
             row.update(header)
             row['CTDoseLengthProductTotal'] = CDLPT
             rows.append(row)
