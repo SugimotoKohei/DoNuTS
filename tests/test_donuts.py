@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 import DoNuTS
@@ -136,3 +137,17 @@ def test_pixel_data_is_not_loaded(tmp_path):
     (loaded,) = DoNuTS.get_dicom_path([str(tmp_path / 'pet.dcm')])
 
     assert 'PixelData' not in loaded
+
+
+def test_csv_is_cp932_when_possible(tmp_path):
+    path = tmp_path / 'out.csv'
+    DoNuTS.write_csv(pd.DataFrame({'PatientName': ['山田^太郎']}), str(path))
+
+    assert path.read_bytes().decode('cp932').splitlines() == ['PatientName', '山田^太郎']
+
+
+def test_csv_falls_back_to_utf8_for_non_cp932_characters(tmp_path):
+    path = tmp_path / 'out.csv'
+    DoNuTS.write_csv(pd.DataFrame({'PatientName': ['𠮷田^花子']}), str(path))
+
+    assert path.read_text(encoding='utf-8-sig').splitlines() == ['PatientName', '𠮷田^花子']
