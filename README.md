@@ -73,13 +73,29 @@ DoNuTSとはRDSR(Radiation Dose Structured Report)とDICOM(Digital Imaging and C
 - SiemensのCT装置のRDSRとPET/CT装置のRDSRとPET画像
 - PhillipsのCT装置のRDSR
 
+## 開発環境
+
+Python 3.11以上が必要です（pandas 3の要件）．依存ライブラリは以下でインストールできます．
+
+```
+pip install -r requirements-dev.txt
+```
+
+テストは以下で実行できます（tkinterやDICOMの実データは不要です）．
+
+```
+python -m pytest tests
+```
+
 ## 実行ファイルの作成
 
-本ソフトウェアの実行ファイルの作成（exe化）には`pyinstaller`を使用しました．開発版を使用することでWindows7の端末でも動作することを確認しました．もし，ソースコードを編集して実行ファイルを作成する場合，`DoNuTS.py`が存在するディレクトリに移動して，以下のコマンドを入力してください．
+本ソフトウェアの実行ファイルの作成（exe化）には`pyinstaller`を使用しています．`DoNuTS.py`が存在するディレクトリに移動して，以下のコマンドを入力してください．実行ファイルはビルドしたOS用のものが作成されるため，Windows用はWindows上で，Mac用はMac上でビルドしてください．
 
 ```
 pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 ```
+
+なお，Python 3.9以降はWindows 7に対応していないため，現在の環境で作成した実行ファイルはWindows 10以降が必要です．Windows 7で使用する場合はRelease v0.1.0の実行ファイルを使用してください．
 
 ## その他
 
@@ -93,4 +109,5 @@ pyinstaller DoNuTS.py --onefile --clean --icon=DoNuTS.ico
 2020.11.10 出力項目を4つ増加し，Philips装置のRDSRで動作を確認  
 2021.01.30 Macでも動作するように修正し，Releaseから実行ファイルをダウンロードするように変更  
 2021.02.12 Release上のwindows用の実行ファイルが空であったため，再アップロード（A様報告ありがとうございました）  
-2026.10.23 RDSRごとのイベント数とCT Acquisition数が一致しない場合に患者情報の行がずれる不具合，PETのみのフォルダで異常終了する不具合，値が0の項目が空欄になる不具合を修正
+2026.10.23 RDSRごとのイベント数とCT Acquisition数が一致しない場合に患者情報の行がずれる不具合，PETのみのフォルダで異常終了する不具合，値が0の項目が空欄になる不具合を修正  
+2026.10.23 Python 3.11以上・pandas 3・pydicom 3に対応．cp932で表せない文字を含む場合はBOM付きUTF-8でcsvを出力するように変更

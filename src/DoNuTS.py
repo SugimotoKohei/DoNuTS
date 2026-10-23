@@ -299,6 +299,15 @@ def process(dicom_directory):
     return df
 
 
+def write_csv(df, path):
+    '''csvをcp932で出力する。cp932で表せない文字がある場合はBOM付きUTF-8で出力する'''
+    try:
+        df.to_csv(path, index=False, encoding='cp932')
+    except UnicodeEncodeError:
+        df.to_csv(path, index=False, encoding='utf-8-sig')
+        print('cp932で表せない文字が含まれていたため、BOM付きUTF-8で保存しました')
+
+
 def main():
     '''各関数を実施し，RDSRとPETのデータをcsvとして出力'''
     print('**************************処理開始****************************')
@@ -312,7 +321,7 @@ def main():
         sys.exit(0)
 
     # 最初に選択したdirectoryにcsvとしてデータを出力
-    df.to_csv(dicom_directory + '/' + str(datetime.date.today()) + '.csv', index=False, encoding='cp932')
+    write_csv(df, dicom_directory + '/' + str(datetime.date.today()) + '.csv')
 
     print('**************************処理完了****************************')
     messagebox.showinfo('処理完了', str(dicom_directory)+'にデータが保存されました')
