@@ -151,3 +151,36 @@ def test_csv_falls_back_to_utf8_for_non_cp932_characters(tmp_path):
     DoNuTS.write_csv(pd.DataFrame({'PatientName': ['𠮷田^花子']}), str(path))
 
     assert path.read_text(encoding='utf-8-sig').splitlines() == ['PatientName', '𠮷田^花子']
+
+
+def test_procedure_context_accepts_srt_and_snomed_codes(tmp_path):
+    srt = f.ct_acquisition('SRT', 1, 1)
+    srt.ContentSequence.append(f.code('G-C32C', 'Diagnostic', 'SRT'))
+    sct = f.ct_acquisition('SCT', 1, 1)
+    sct.ContentSequence.append(f.code('408730004', 'Screening', 'SCT'))
+    write(tmp_path, [f.rdsr('A', [srt, sct], f.accumulated(2, 2))])
+
+    df = DoNuTS.process(str(tmp_path))
+
+    assert list(df['ProcedureContext']) == ['Diagnostic', 'Screening']
+
+
+def test_last_xray_source_is_used_for_dual_source(tmp_path):
+    acquisition = f.ct_acquisition('Dual', 1, 1)
+    parameters = DoNuTS.find_content(acquisition.ContentSequence, '113822')
+    parameters.ContentSequence.append(f.container('113831', [f.text('113832', 'B'), f.num('113733', 140)]))
+    write(tmp_path, [f.rdsr('A', [acquisition], f.accumulated(1, 1))])
+
+    df = DoNuTS.process(str(tmp_path))
+
+    assert df.loc[0, 'IdentificationoftheXRaySource'] == 'B'
+    assert df.loc[0, 'KVP'] == 140
+
+
+def test_reason_for_proceeding_is_read_from_notification_only(tmp_path):
+    alert = f.container('113900', [f.text('113907', 'AlertReason')])
+    write(tmp_path, [f.rdsr('A', [f.ct_acquisition('Head', 50, 800, extra_dose=[alert])], f.accumulated(1, 800))])
+
+    df = DoNuTS.process(str(tmp_path))
+
+    assert df.loc[0, 'ReasonforProceeding'] == ' '
